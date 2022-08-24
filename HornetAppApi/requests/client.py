@@ -19,7 +19,7 @@ class HornetClientR(HornetClientAbs):
         self.Session.headers['Authorization'] = 'Hornet ' + token
 
     def GetToken(self) -> str:
-        return self.Session.headers['Authorization']
+        return self.Session.headers['Authorization'][7:]
 
     # API functions:
 
