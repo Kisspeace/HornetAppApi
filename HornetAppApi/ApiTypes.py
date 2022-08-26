@@ -110,6 +110,7 @@ class HornetPartialPhoto(JsonLoadable):
 
 class HornetPhoto(HornetPartialPhoto):
     def __init__(self):
+        HornetPartialPhoto.__init__(self)
         self.id = -1
         self.state = ""
         self.slot = 0
