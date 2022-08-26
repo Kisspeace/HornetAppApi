@@ -6,6 +6,11 @@ API_URL = "https://" + API_HOST + '/api/v3/' # "/api/v3/members/near?page=1&per_
 DEF_MEMBERS_PER_PAGE = 27
 DEF_GALLERY_PREW_PHOTOS = 6
 
+class IdAndTitle(JsonLoadable):
+    def __init__(self):
+        self.id = -1
+        self.title = ''
+
 class HornetPagination(JsonLoadable):
     def __init__(self):
         self.previous = None
