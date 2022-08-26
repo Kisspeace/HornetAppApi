@@ -184,15 +184,13 @@ class HornetMember(HornetPartialMember):
         self.show_onboarding = False
         # self.interests = {"hashtags: []"}
         self.created_at = ""
-        self.relationship_id = -1 # relationship 
-        self.relationship_title = ""
-        self.ethnicity = None
-        self.identity = None
-        self.unit_of_measure_id = -1
-        self.unit_of_measure_title = ""
-        self.gender = None
-        self.sexuality = None
-        self.pronouns = None
+        self.relationship = IdAndTitle()
+        self.ethnicity = IdAndTitle()
+        self.identity = IdAndTitle()
+        self.unit_of_measure = IdAndTitle()
+        self.gender = IdAndTitle()
+        self.sexuality = IdAndTitle()
+        self.pronouns = IdAndTitle()
         # self.looking_fors = {"looking_fors": []}
         self.public = None
         self.private = None
@@ -211,9 +209,6 @@ class HornetMember(HornetPartialMember):
 
     def LoadFromDict(self, D):
         HornetPartialMember.LoadFromDict(self, D)
-        self.unit_of_measure_id    = D['unit_of_measure']['id']
-        self.unit_of_measure_title = D['unit_of_measure']['title']
-
         if ( 'photos' in D ):
             self.photos = ParseBadNamedDictList(HornetPhoto, D, 'photos', 'photo')
     
