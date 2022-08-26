@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = 'HornetAppApi', 
-    version = '0.1.0', 
+    version = '0.1.1', 
     author='Kisspeace',
     # author_email='Kisspeace@example.com',
     url='http://github.com/Kisspeace/HornetAppApi',
