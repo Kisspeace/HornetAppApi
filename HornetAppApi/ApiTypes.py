@@ -44,15 +44,19 @@ class HornetPartialComment(JsonLoadable):
         self.type: str = ''
         self.body: str = ''
         self.profile = HornetPartialMember()
-        self.account_username: str = '' # account: {username: ''} FIXME 
+        self.account = self.Account()
         self.owned_by_me: bool = False
         self.created_at: str = None
         self.updated_at: str = None
         self.reactions = HornetReactions() 
 
-    def load_from_dict(self, source: dict):
-        JsonLoadable.load_from_dict(self, source)
-        self.account_username = source['account']['username']
+    class Account(JsonLoadable):
+        def __init__(self):
+            self.username: str = ''
+
+    # def load_from_dict(self, source: dict):
+    #     JsonLoadable.load_from_dict(self, source)
+    #     self.account_username = source['account']['username']
 
 
 class HornetActivity(JsonLoadable): # FIXME not complete yet
@@ -143,8 +147,6 @@ class HornetPartialMember(JsonLoadable):
         self.mitch_rank_index = None
         self.age: int = None
         self.account = self.Account()
-        # self.account_username: str = ''
-        # self.account_public: bool = False
         self.distance: float = 0.0
         self.unread_messages_from: int = 0
         self.explorer: bool = False
@@ -170,12 +172,6 @@ class HornetPartialMember(JsonLoadable):
         def __init__(self):
             self.username: str = ''
             self.public: bool = False
-
-    # def load_from_dict(self, source: dict):
-    #     JsonLoadable.load_from_dict(self, source)
-    #     if 'account' in source:
-    #         self.account_username = source['account']['username']
-    #         self.account_public   = source['account']['public']
 
     def IsValid(self):
         return self.id != -1
