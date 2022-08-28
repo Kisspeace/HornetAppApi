@@ -76,8 +76,8 @@ class HornetClientAio(HornetClientAbs):
                             "category": "general", 
                             "key": "age",
                             "data": {
-                                "max": int(min_age),
-                                "min": int(max_age)
+                                "max": int(max_age),
+                                "min": int(min_age)
                             }
                         }
                     }
