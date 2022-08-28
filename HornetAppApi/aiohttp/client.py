@@ -278,3 +278,22 @@ class HornetClientAio(HornetClientAbs):
 
             await self._on_response(resp)
             return resp.status == 200
+        
+    @_apicall
+    async def get_comments(self, activity_id, before = None, after = None) -> List[any]:
+        if before is not None:
+            params = f'&before={before}'
+        elif after is not None:
+            params = f'&after={after}'
+        else:
+            params = ''
+
+        async with aiohttp.ClientSession() as session:
+            resp = await session.get(
+                f'{API_URL}activities/{activity_id}/comments.json?activity_id={activity_id}{params}',
+                headers = self._headers)
+
+            await self._on_response(resp)
+            obj = await resp.json()
+            res = obj
+            return res
