@@ -35,6 +35,27 @@ class HornetClientR(HornetClientAbs):
         return res
 
     @HornetClientAbs._apicall
+    def get_location_info(self) -> HornetLocationInfo:
+        headers_save = self.session.headers
+        headers = {}
+
+        for name, value in headers_save.items():
+            if name in ('User-Agent', 'Accept', 'Accept-Encoding'):
+                headers[name] = value
+
+        self.session.headers = headers
+        try:
+            resp = self.session.get(f'{HORNETAPP_URL}location-info')
+        finally:
+            self.session.headers = headers_save
+
+        self._on_response(resp)
+        obj = resp.json()
+        res = HornetLocationInfo()
+        res.load_from_dict(obj)
+        return res
+
+    @HornetClientAbs._apicall
     def set_filters(self, min_age: int, max_age: int):
         body = {
             "filters": [
@@ -79,7 +100,7 @@ class HornetClientR(HornetClientAbs):
         return res
 
     @HornetClientAbs._apicall
-    def get_member_feed_photos(self, member_id, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE):
+    def get_member_feed_photos(self, member_id, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetFeedPhoto]:
         respo = self.session.get(API_URL + f'feed_photos?page={page}&per_page={per_page}&member_id={member_id}')
         self._on_response(respo)
         obj = respo.json()
