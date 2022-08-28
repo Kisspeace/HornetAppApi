@@ -116,3 +116,22 @@ class HornetClientAbs:
     def delete_conversation(self, member_id) -> bool:
         pass
 
+    @_apicall
+    def add_ignore_member(self, member_id) -> bool:
+        pass
+
+    @_apicall
+    def delete_ignore_member(self, member_id) -> bool:
+        pass
+
+    @_apicall
+    def add_block_member(self, member_id) -> bool:
+        pass
+
+    @_apicall
+    def delete_block_member(self, member_id) -> bool:
+        pass
+
+    @_apicall
+    def get_comments(self, activity_id, before = none, after = None) -> List[any]:
+        pass

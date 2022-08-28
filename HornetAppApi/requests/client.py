@@ -154,12 +154,46 @@ class HornetClientR(HornetClientAbs):
         self._on_response(respo)
         return respo.status_code != 404
 
+    @HornetClientAbs._apicall
+    def add_ignore_member(self, member_id) -> bool:
+        obj = { "member_id": member_id, "t": 0 }
+        resp = self.session.post(
+            f'{API_URL}explore_ignores',
+            json = obj)
+
+        self._on_response(resp)
+        return resp.status in (203, 200)
+
+    @HornetClientAbs._apicall
+    def delete_ignore_member(self, member_id) -> bool:
+        resp = self.session.delete(f'{API_URL}explore_ignores/{member_id}')
+        self._on_response(resp)
+        return resp.status in (203, 200)
+
+    @HornetClientAbs._apicall
+    def add_block_member(self, member_id) -> bool:
+        obj = { "member_id": member_id, "t": 0 }
+        resp = self.session.post(
+            f'{API_URL}blocks.json',
+            json = obj)
+
+        self._on_response(resp)
+        obj = resp.json()
+        res = obj['block']['member_id'] == member_id
+        return res
+
+    @HornetClientAbs._apicall
+    def delete_block_member(self, member_id) -> bool:
+        resp = self.session.delete(f'{API_URL}blocks/{member_id}')
+        self._on_response(resp)
+        return resp.status == 200
+
     # def GetLookupData(self):
     #     Response = self.session.get(API_URL + f'lookup_data/all')
     #     Js = Response.json()
-    #     save_dump('GetLookupData', Js) 
+    #     save_dump('GetLookupData', Js)
 
-    
+
     # def Send(self, memberId, data = None, type = "chat"): # Android like
     #     Js = {
     #         "client_ref": str(uuid.uuid4()), 

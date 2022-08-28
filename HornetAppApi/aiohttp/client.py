@@ -232,3 +232,49 @@ class HornetClientAio(HornetClientAbs):
 
         self._on_response(respo)
         return respo.status != 404
+
+    @_apicall
+    async def add_ignore_member(self, member_id) -> bool:
+        obj = { "member_id": member_id, "t": 0 }
+        async with aiohttp.ClientSession() as session:
+            resp = await session.post(
+                f'{API_URL}explore_ignores',
+                headers = self._headers,
+                json = obj)
+
+            await self._on_response(resp)
+            return resp.status in (203, 200)
+
+    @_apicall
+    async def delete_ignore_member(self, member_id) -> bool:
+        async with aiohttp.ClientSession() as session:
+            resp = await session.delete(
+                f'{API_URL}explore_ignores/{member_id}',
+                headers = self._headers)
+
+            await self._on_response(resp)
+            return resp.status in (203, 200)
+
+    @_apicall
+    async def add_block_member(self, member_id) -> bool:
+        obj = { "member_id": member_id, "t": 0 }
+        async with aiohttp.ClientSession() as session:
+            resp = await session.post(
+                f'{API_URL}blocks.json',
+                headers = self._headers,
+                json = obj)
+
+            await self._on_response(resp)
+            obj = await resp.json()
+            res = obj['block']['member_id'] == member_id
+            return res
+
+    @_apicall
+    async def delete_block_member(self, member_id) -> bool:
+        async with aiohttp.ClientSession() as session:
+            resp = await session.delete(
+                f'{API_URL}blocks/{member_id}',
+                headers = self._headers)
+
+            await self._on_response(resp)
+            return resp.status == 200
