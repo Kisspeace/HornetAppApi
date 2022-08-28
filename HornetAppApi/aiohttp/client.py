@@ -56,6 +56,18 @@ class HornetClientAio(HornetClientAbs):
             return res
 
     @_apicall
+    async def get_location_info(self) -> HornetLocationInfo:
+        async with aiohttp.ClientSession() as session:
+            resp = await session.get(
+                f'{HORNETAPP_URL}location-info')
+            
+            await self._on_response(resp)
+            obj = await resp.json()
+            res = HornetLocationInfo()
+            res.load_from_dict(obj)
+            return res
+    
+    @_apicall
     async def set_filters(self, min_age: int, max_age: int):
         body = {
             "filters": [
