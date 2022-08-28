@@ -2,7 +2,7 @@ from .JsonClass import *
 from typing import List
 
 API_HOST = "gethornet.com"
-API_URL = "https://" + API_HOST + '/api/v3/' # "/api/v3/members/near?page=1&per_page=27"
+API_URL = "https://" + API_HOST + '/api/v3/'
 
 DEF_MEMBERS_PER_PAGE = 27
 DEF_GALLERY_PREW_PHOTOS = 6
@@ -38,7 +38,7 @@ class HornetPartialComment(JsonLoadable):
         self.type: str = ''
         self.body: str = ''
         self.profile = HornetPartialMember()
-        self.account_username: str = '' # account: {username: ''}
+        self.account_username: str = '' # account: {username: ''} FIXME 
         self.owned_by_me: bool = False
         self.created_at: str = None
         self.updated_at: str = None
@@ -48,7 +48,7 @@ class HornetPartialComment(JsonLoadable):
         JsonLoadable.load_from_dict(self, source)
         self.account_username = source['account']['username']
 
-class HornetActivity(JsonLoadable):
+class HornetActivity(JsonLoadable): # FIXME not complete yet
     def __init__(self):
         self.id: int = -1
         self.title: str = ''
@@ -75,8 +75,6 @@ class HornetActivity(JsonLoadable):
         self.profile = HornetPartialMember()
         # thumbnail	{…}
         self.reactions = HornetReactions()
-        # self.reactions_total = 0 # reactions: {total: 0}
-        # self.reacted_to_by_me = False # reactions: {reacted_to_by_me: false}
         self.comments_total: int = 0 # comments: {total: 0}
         self.last_comment: any = None # comments: {last_comment: null}
         self.awards_total: int = 0 # awards: {total: 0}
