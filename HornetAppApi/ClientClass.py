@@ -57,10 +57,15 @@ class HornetClientAbs:
         return inner
 
     # API functions:
+    
     @_apicall
     def get_session(self) -> HornetSession:
         pass
 
+    @_apicall
+    def get_location_info(self) -> HornetLocationInfo:
+        pass
+    
     @_apicall
     def set_filters(self, min_age: int, max_age: int):
         pass
