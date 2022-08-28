@@ -4,111 +4,110 @@ from .ApiTypes import *
 
 class HornetClientAbs:
     def __init__(self):
-        self.ApiCallTimeout = 0.380 # 380 ms. set 0 to disable
+        self.apicall_timeout: float = 0.380 # 380 ms. set 0 to disable
         # self.LastResponse = None
         # public events
-        self.OnResponse = None # reference to procedure (sender: HornetClientAbs, response)
+        self.event_response = None # reference to procedure (sender: HornetClientAbs, response)
         # protected
-        self._LastApiCallTime = None
-    
+        self._last_apicall_time: float = None
+
     # Setters & getters:
 
-    def SetHeaders(self, headers):
+    def set_headers(self, headers: dict):
         pass
 
-    def GetHeaders(self) -> dict:
+    def get_headers(self) -> dict:
         pass
 
-    def SetToken(self, token: str):
+    def set_token(self, token: str):
         pass
 
-    def GetToken(self) -> str:
+    def get_token(self) -> str:
         pass
 
-    def GetCurrentTimeout(self) -> float:
-        result = 0
-        if ((self._LastApiCallTime != None) and (self.ApiCallTimeout > 0)):
-            t = (time.time() - self._LastApiCallTime)
-            if (t < self.ApiCallTimeout):
-                result =  (self.ApiCallTimeout - t)    
-        else:
-            result = 0
+    def get_current_timeout(self) -> float:
+        result: float = 0.0
+        if ((self._last_apicall_time != None) and 
+            (self.apicall_timeout > 0)):
+            t = (time.time() - self._last_apicall_time)
+            result = (self.apicall_timeout - t) if (t < self.apicall_timeout) else 0.0
         return result
 
     # protected
 
-    def _DoOnResponse(self, response):
-        if callable(self.OnResponse):
-            self.OnResponse(self, response)
+    def _on_response(self, response):
+        if callable(self.event_response):
+            self.event_response(self, response)
 
-    def _ParseMembers(self, D) -> list:
-        return ParseBadNamedDictList(HornetPartialMember, D, 'members', 'member')
+    def _parse_members(self, source: dict) -> list:
+        return parse_badnamed_dict_list(HornetPartialMember, source, 'members', 'member')
 
-    def _ApiCall(func):
+    def _apicall(func):
         def inner(self, *args, **kwargs):
-            t = self.GetCurrentTimeout()
-            if (t > 0):
+            t = self.get_current_timeout()
+            if t > 0:
                 # print('sleep: ', t)
                 time.sleep(t)
             
             result = func(self, *args, **kwargs)       
-            self._LastApiCallTime = time.time()
-            # print(f'{func.__name__} finished at: {self._LastApiCallTime}')
+            self._last_apicall_time = time.time()
+            # print(f'{func.__name__} finished at: {self._last_apicall_time}')
+            # print(f'current timeout: {self.get_current_timeout()}')
             return result
         return inner
 
     # API functions:
-
-    @_ApiCall
-    def SetFilters(self, minAge, maxAge):
+    @_apicall
+    def get_session(self) -> HornetSession:
         pass
 
-    @_ApiCall
-    def _GetMembers(self, path: str, page = 1, perPage = DEF_MEMBERS_PER_PAGE) -> list:
+    @_apicall
+    def set_filters(self, min_age: int, max_age: int):
         pass
 
-    def GetMembersNear(self, page = 1, perPage = DEF_MEMBERS_PER_PAGE) -> list:
-        return self._GetMembers(path='near', page=page, perPage=perPage)
-
-    def GetMembersRecent(self, page = 1, perPage = DEF_MEMBERS_PER_PAGE) -> list:
-        return self._GetMembers(path='recent', page=page, perPage=perPage)
-     
-    @_ApiCall 
-    def GetMembersByUsername(self, username: str, page = 1, perPage = 25) -> list:
-        pass
-    
-    @_ApiCall
-    def GetMembersByHashtags(self, hashtags, page = 1, perPage = 25) -> list:
+    @_apicall
+    def _get_members(self, path: str, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> list:
         pass
 
-    @_ApiCall
-    def GetMember(self, id, gallery_preview_photos = DEF_GALLERY_PREW_PHOTOS) -> HornetMember:
+    def get_members_near(self, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> list:
+        return self._get_members(path='near', page=page, per_page=per_page)
+
+    def get_members_recent(self, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> list:
+        return self._get_members(path='recent', page=page, per_page=per_page)
+
+    @_apicall 
+    def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> list:
         pass
 
-    @_ApiCall
-    def GetMemberFeedPhotos(self, memberId, page = 1, perPage = DEF_MEMBERS_PER_PAGE) -> list:
+    @_apicall
+    def get_members_by_hashtags(self, hashtags, page: int = 1, per_page: int = 25) -> list:
         pass
 
-    @_ApiCall
-    def GetConversations(self, inbox = "primary", page = 1, perPage = 10) -> HornetConversations:
+    @_apicall
+    def get_member(self, member_id, gallery_preview_photos: int = DEF_GALLERY_PREW_PHOTOS) -> HornetMember:
         pass
 
-    @_ApiCall
-    def GetUnread(self, page = 1, perPage = 10) -> HornetConversations:
+    @_apicall
+    def get_member_feed_photos(self, member_id, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> list:
         pass
 
-    @_ApiCall
-    def GetMemberFeeds(self, memberId, after = None, perPage = 10):
+    @_apicall
+    def get_conversations(self, inbox: str = "primary", page: int = 1, per_page: int = 10) -> HornetConversations:
         pass
 
-    @_ApiCall
-    def GetFeedsTimeline(self, after = None, perPage = 8) -> HornetActivities:
+    @_apicall
+    def get_unread(self, page = 1, per_page: int = 10) -> HornetConversations:
         pass
 
-    @_ApiCall
-    def DeleteConversation(self, memberId) -> bool:
+    @_apicall
+    def get_member_feeds(self, member_id, after = None, per_page: int = 10):
         pass
 
-    
+    @_apicall
+    def get_feeds_timeline(self, after = None, per_page: int = 8) -> HornetActivities:
+        pass
 
-        
+    @_apicall
+    def delete_conversation(self, member_id) -> bool:
+        pass
+

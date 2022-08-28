@@ -9,8 +9,8 @@ DEF_GALLERY_PREW_PHOTOS = 6
 
 class IdAndTitle(JsonLoadable):
     def __init__(self):
-        self.id: int = -1
-        self.title: str = ''
+        self.id: int = None
+        self.title: str = None
 
 class HornetPagination(JsonLoadable):
     def __init__(self):
@@ -44,9 +44,9 @@ class HornetPartialComment(JsonLoadable):
         self.updated_at: str = None
         self.reactions = HornetReactions() 
 
-    def LoadFromDict(self, D):
-        JsonLoadable.LoadFromDict(self, D)
-        self.account_username = D['account']['username']
+    def load_from_dict(self, source: dict):
+        JsonLoadable.load_from_dict(self, source)
+        self.account_username = source['account']['username']
 
 class HornetActivity(JsonLoadable):
     def __init__(self):
@@ -81,32 +81,32 @@ class HornetActivity(JsonLoadable):
         self.last_comment: any = None # comments: {last_comment: null}
         self.awards_total: int = 0 # awards: {total: 0}
 
-    def LoadFromDict(self, D):
-        JsonLoadable.LoadFromDict(self, D)
+    def load_from_dict(self, source: dict):
+        JsonLoadable.load_from_dict(self, source)
         # self.reactions_total  = D['reactions']['total']
         # self.reacted_to_by_me = D['reactions']['reacted_to_by_me']
-        if 'awards' in D:
-            self.awards_total = D['awards']['total']
+        if 'awards' in source:
+            self.awards_total = source['awards']['total']
 
-        if 'comments' in D:
-            self.comments_total = D['comments']['total']
-            if (('last_comment' in D['comments']) and
-                (D['comments']['last_comment'] is not None)):
+        if 'comments' in source:
+            self.comments_total = source['comments']['total']
+            if (('last_comment' in source['comments']) and
+                (source['comments']['last_comment'] is not None)):
                 self.last_comment = HornetPartialComment()
-                self.last_comment.LoadFromDict(D['comments']['last_comment'])
+                self.last_comment.load_from_dict(source['comments']['last_comment'])
 
-        if (('photos' in D) and (self.photos is not None)):
-            self.photos = ParseBadNamedDictList(HornetPartialPhoto, D, 'photos', 'photo')
+        if (('photos' in source) and (self.photos is not None)):
+            self.photos = parse_badnamed_dict_list(HornetPartialPhoto, source, 'photos', 'photo')
 
 class HornetActivities(JsonLoadable):
     def __init__(self):
         self.activities: List[HornetActivity] = []
         self.pagination = HornetPagination()
         
-    def LoadFromDict(self, D):
-        JsonLoadable.LoadFromDict(self, D)
-        if 'activities' in D:
-            self.activities = ParseBadNamedDictList(HornetActivity, D, 'activities', 'activity')
+    def load_from_dict(self, source: dict):
+        JsonLoadable.load_from_dict(self, source)
+        if 'activities' in source:
+            self.activities = parse_badnamed_dict_list(HornetActivity, source, 'activities', 'activity')
 
 class HornetPartialPhoto(JsonLoadable):
     def __init__(self):
@@ -157,11 +157,11 @@ class HornetPartialMember(JsonLoadable):
         self.square_url: str = ''
         self.v6_full_url: str= ''
 
-    def LoadFromDict(self, D):
-        JsonLoadable.LoadFromDict(self, D)
-        if 'account' in D:
-            self.account_username = D['account']['username']
-            self.account_public   = D['account']['public']
+    def load_from_dict(self, source: dict):
+        JsonLoadable.load_from_dict(self, source)
+        if 'account' in source:
+            self.account_username = source['account']['username']
+            self.account_public   = source['account']['public']
 
     def IsValid(self):
         return self.id != -1
@@ -180,19 +180,20 @@ class HornetMember(HornetPartialMember):
         self.preferred_language: str = ''
         self.location: str = None
         self.bio: str = '' # is about_you ???
+        self.date_of_birth: str = None
         self.crowned: bool = False
         self.recent_hearts_sent: int = 0
         self.visible: bool = False
         self.show_onboarding: bool = False
         # self.interests = {"hashtags: []"}
         self.created_at: str = ''
-        self.relationship = IdAndTitle()
-        self.ethnicity = IdAndTitle()
-        self.identity = IdAndTitle()
-        self.unit_of_measure = IdAndTitle()
-        self.gender = IdAndTitle()
-        self.sexuality = IdAndTitle()
-        self.pronouns = IdAndTitle()
+        self.relationship = IdAndTitle() # Can be None!
+        self.ethnicity = IdAndTitle() # Can be None!
+        self.identity = IdAndTitle() # Can be None!
+        self.unit_of_measure = IdAndTitle() # Can be None!
+        self.gender = IdAndTitle() # Can be None!
+        self.sexuality = IdAndTitle() # Can be None!
+        self.pronouns = IdAndTitle() # Can be None!
         # self.looking_fors = {"looking_fors": []}
         self.public: int = None # public photos count
         self.private: int = None # private photos count
@@ -209,11 +210,11 @@ class HornetMember(HornetPartialMember):
         self.followed_count: int = 0
         self.posts_count: int = 0
 
-    def LoadFromDict(self, D):
-        HornetPartialMember.LoadFromDict(self, D)
-        if 'photos' in D:
-            self.photos = ParseBadNamedDictList(HornetPhoto, D, 'photos', 'photo')
-            
+    def load_from_dict(self, source: dict):
+        HornetPartialMember.load_from_dict(self, source)
+        if 'photos' in source:
+            self.photos = parse_badnamed_dict_list(HornetPhoto, source, 'photos', 'photo')
+          
     def HasAvatar(self):
         return len(self.photos) > 0
 
@@ -235,21 +236,101 @@ class HornetConversations(JsonLoadable):
         self.unread_count: int = -1
         self.inbox: str = '' # inbox type
 
-    def LoadFromDict(self, D):
-        JsonLoadable.LoadFromDict(self, D)
-        self.chats = ParseBadNamedDictList(HornetConversation, D, 'conversations', 'conversation') 
+    def load_from_dict(self, source: dict):
+        JsonLoadable.load_from_dict(self, source)
+        self.chats = parse_badnamed_dict_list(HornetConversation, source, 'conversations', 'conversation') 
 
 
+class HornetSession(JsonLoadable): # FIXME not complete yet
+    def __init__(self):
+        self.access_token: str = ''
+        self.external_access_token: str = ''
+        self.valid_until: str = '' # date
+        self.account = self.Account()
+        self.profile = HornetMember()
+        # self.settings
+        self.totals = self.Totals()
+        # self.filters
+        self.onboarding_objective_set = self.OnboardingObjectiveSet()
+        self.public_share_moment_toggle = self.PublicShareMomentToggle()
+        self.honey_account = self.HoneyAccount()
+        self.hornet_points_account = self.HornetPointsAccount()
+        # self.entitlements
+        # self.user_video_audience_options
+
+    class Account(JsonLoadable): # FIXME not complete yet
+        def __init__(self):
+            self.id: int = -1
+            self.username: str = ''
+            self.sanitized_username: str = ''
+            self.username_claimed: bool = False
+            self.email: str = ''
+            self.email_verified: bool = False
+            self.has_password: bool = False
+            self.public: bool = False
+            self.email_opt_out: bool = False
+            self.email_not_deliverable: bool = False
+            self.new_user: bool = False
+            # self.wallet
+            self.premium = self.Premium()
+            self.phone_number: any = None
+            self.delete_cancelled: bool = False
+
+        class Premium(JsonLoadable):
+            def __init__(self):
+                self.active: bool = False
+                self.subscription: bool = False
+                self.valid_until: str = None
+                self.premium_plan = None
+                self.app_store_identifier = None
+                self.cancelled: bool = False
+
+    class Totals(JsonLoadable):
+        def __init__(self):
+            self.blocks: int = 0
+            self.private_photo_access_permissions: int = 0
+            self.favourites: int = 0
+            self.fans: int = 0
+            self.matches: int = 0
+            self.posts: int = 0
+            self.awards: int = 0
+            self.spaces: int = 0
+            self.timeline_head: any = None
+            self.timeline_updated_at: str = None
+            self.notifications_head: any = None
+            self.notifications_updated_at: any = None
+            self.unread_messages: int = 0
+            self.primary_inbox_dot: bool = False
+            self.requests_inbox_dot: bool = False
+
+    class OnboardingObjectiveSet(JsonLoadable):
+        def __init__(self):
+            self.upload_profile_photo: any = None
+            self.set_display_name: any = None
+            self.follow_member: any = None
+            self.post_moment: any = None
+            self.updated_at: any = None
+            
+    class PublicShareMomentToggle(JsonLoadable):
+        def __init__(self):
+            self.enabled: bool = False
+            self.text: str = ''
+            self.default_state: bool = False 
+
+    class HoneyAccount(JsonLoadable):
+        def __init__(self):
+            self.balance: int = 0
+
+    class HornetPointsAccount(JsonLoadable):
+        def __init__(self):
+            self.id: any = None
+            self.balance: int = 0
 
 
-
-
-
-def ParseBadNamedDictList(itemClass, d, listName, itemName):
-    Result: List[itemClass] = []
-    print(type(Result))
-    for obj in d[listName]:
-        item = itemClass()
-        item.LoadFromDict(obj[itemName])
-        Result.append(item)
-    return Result  
+def parse_badnamed_dict_list(item_class, source: list, list_name: str, item_name: str):
+    result: List[item_class] = []
+    for obj in source[list_name]:
+        item = item_class()
+        item.load_from_dict(obj[item_name])
+        result.append(item)
+    return result

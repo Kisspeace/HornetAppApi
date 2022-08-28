@@ -1,129 +1,140 @@
 import requests, json, time, copy
-from HornetAppApi import *
+from HornetAppApi.ClientClass import *
+from HornetAppApi.JsonClass import *
+from HornetAppApi.ApiTypes import *
 
 class HornetClientR(HornetClientAbs):
 
     def __init__(self):
         HornetClientAbs.__init__(self)
-        self.Session = requests.Session()
+        self.session = requests.Session()
 
     # Setters & getters:
 
-    def SetHeaders(self, headers):
-        self.Session.headers = copy.deepcopy(headers)
+    def set_headers(self, headers: dict):
+        self.session.headers = copy.deepcopy(headers)
 
-    def GetHeaders(self) -> dict:
-        return copy.deepcopy(self.Session.headers)
+    def get_headers(self) -> dict:
+        return copy.deepcopy(self.session.headers)
 
-    def SetToken(self, token: str):
-        self.Session.headers['Authorization'] = 'Hornet ' + token
+    def set_token(self, token: str):
+        self.session.headers['Authorization'] = 'Hornet ' + token
 
-    def GetToken(self) -> str:
-        return self.Session.headers['Authorization'][7:]
+    def get_token(self) -> str:
+        return self.session.headers['Authorization'][7:]
 
     # API functions:
 
-    @HornetClientAbs._ApiCall
-    def SetFilters(self, minAge, maxAge):
+    @HornetClientAbs._apicall
+    def get_session(self) -> HornetSession:
+        resp = self.session.get(f'{API_URL}session')
+        self._on_response(resp)
+        obj = resp.json()
+        res = HornetSession()
+        res.load_from_dict(obj['session'])
+        return res
+
+    @HornetClientAbs._apicall
+    def set_filters(self, min_age: int, max_age: int):
         body = {
             "filters": [
                     {
                         "filter": {
-                            "category": "general", 
+                            "category": "general",
                             "key": "age",
                             "data": {
-                                "max": int(maxAge),
-                                "min": int(minAge)
+                                "max": int(min_age),
+                                "min": int(max_age)
                             }
                         }
                     }
                 ]
         }
-        headers = copy.deepcopy(self.Session.headers)
+        headers = copy.deepcopy(self.session.headers)
         headers['content-type'] = 'application/json; charset=UTF-8'
-        respo = self.Session.post(API_URL + 'filters.json', headers=headers, json=body)
-        self._DoOnResponse(respo)
+        respo = self.session.post(API_URL + 'filters.json', headers=headers, json=body)
+        self._on_response(respo)
 
-    @HornetClientAbs._ApiCall
-    def _GetMembers(self, path: str, page = 1, perPage = DEF_MEMBERS_PER_PAGE) -> list:
-        respo = self.Session.get(API_URL + f'members/{path}?page={page}&per_page={perPage}')
-        self._DoOnResponse(respo)
-        js = respo.json()
-        return self._ParseMembers(js) 
+    @HornetClientAbs._apicall
+    def _get_members(self, path: str, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
+        respo = self.session.get(API_URL + f'members/{path}?page={page}&per_page={per_page}')
+        self._on_response(respo)
+        obj = respo.json()
+        return self._parse_members(obj)
 
-    @HornetClientAbs._ApiCall
-    def GetMembersByUsername(self, username: str, page = 1, perPage = 25) -> list:
-        respo = self.Session.get(API_URL + f'members/search?username={username}&page={page}&per_page={perPage}')
-        self._DoOnResponse(respo)
-        js = respo.json()
-        return self._ParseMembers(js)
+    @HornetClientAbs._apicall
+    def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:
+        respo = self.session.get(API_URL + f'members/search?username={username}&page={page}&per_page={per_page}')
+        self._on_response(respo)
+        obj = respo.json()
+        return self._parse_members(obj)
 
-    @HornetClientAbs._ApiCall
-    def GetMember(self, id, gallery_preview_photos = DEF_GALLERY_PREW_PHOTOS) -> HornetMember:
-        respo = self.Session.get(API_URL + f'members/{id}.json?gallery_preview_photos={gallery_preview_photos}')
-        self._DoOnResponse(respo)
-        js = respo.json()
-        Result = HornetMember()
-        Result.LoadFromDict(js['member'])
-        return Result
-
-    @HornetClientAbs._ApiCall
-    def GetMemberFeedPhotos(self, memberId, page = 1, perPage = DEF_MEMBERS_PER_PAGE):
-        respo = self.Session.get(API_URL + f'feed_photos?page={page}&per_page={perPage}&member_id={memberId}')
-        self._DoOnResponse(respo)
-        js = respo.json()
-        return ParseBadNamedDictList(HornetFeedPhoto, js, 'feed_photos', 'feed_photo')
-     
-    @HornetClientAbs._ApiCall 
-    def GetMemberFeeds(self, memberId, after = None, perPage = 10):
-        params = '?'
-        if (after != None):
-            params = params + f'after={after}'
-        params = params + f'&per_page={perPage}'
-
-        respo = self.Session.get(API_URL + f'feeds/{memberId}{params}')
-        self._DoOnResponse(respo)
-        js = respo.json()
-        res = HornetActivities()
-        res.LoadFromDict(js)
+    @HornetClientAbs._apicall
+    def get_member(self, member_id, gallery_preview_photos: int = DEF_GALLERY_PREW_PHOTOS) -> HornetMember:
+        respo = self.session.get(API_URL + f'members/{member_id}.json?gallery_preview_photos={gallery_preview_photos}')
+        self._on_response(respo)
+        obj = respo.json()
+        res = HornetMember()
+        res.load_from_dict(obj['member'])
         return res
 
-    @HornetClientAbs._ApiCall
-    def GetConversations(self, inbox = "primary", page = 1, perPage = 10) -> HornetConversations:
-        respo = self.Session.get(API_URL + f'messages/conversations.json?inbox={inbox}&page={page}&per_page={perPage}')
-        self._DoOnResponse(respo)
-        js = respo.json()
-        Result = HornetConversations()
-        Result.LoadFromDict(js)          
-        return Result
+    @HornetClientAbs._apicall
+    def get_member_feed_photos(self, member_id, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE):
+        respo = self.session.get(API_URL + f'feed_photos?page={page}&per_page={per_page}&member_id={member_id}')
+        self._on_response(respo)
+        obj = respo.json()
+        return parse_badnamed_dict_list(HornetFeedPhoto, obj, 'feed_photos', 'feed_photo')
 
-    @HornetClientAbs._ApiCall
-    def GetUnread(self, page = 1, perPage = 10) -> HornetConversations:
-        return self.GetConversations(inbox = 'unread', page = page, perPage = perPage)
-
-    @HornetClientAbs._ApiCall
-    def GetFeedsTimeline(self, after = None, perPage = 8):
+    @HornetClientAbs._apicall
+    def get_member_feeds(self, member_id, after = None, per_page: int = 10):
         params = '?'
-        if (after != None):
+        if after is not None:
             params = params + f'after={after}'
-        params = params + f'&per_page={perPage}'
-        respo = self.Session.get(API_URL + f'feeds/timeline{params}')
-        self._DoOnResponse(respo)
-        js = respo.json() 
+        params = params + f'&per_page={per_page}'
+
+        respo = self.session.get(API_URL + f'feeds/{member_id}{params}')
+        self._on_response(respo)
+        obj = respo.json()
+        res = HornetActivities()
+        res.load_from_dict(obj)
+        return res
+
+    @HornetClientAbs._apicall
+    def get_conversations(self, inbox = "primary", page: int = 1, per_page: int = 10) -> HornetConversations:
+        respo = self.session.get(API_URL + f'messages/conversations.json?inbox={inbox}&page={page}&per_page={per_page}')
+        self._on_response(respo)
+        obj = respo.json()
+        res = HornetConversations()
+        res.load_from_dict(obj)          
+        return res
+
+    @HornetClientAbs._apicall
+    def get_unread(self, page: int = 1, per_page: int = 10) -> HornetConversations:
+        return self.get_conversations(inbox = 'unread', page = page, per_page = per_page)
+
+    @HornetClientAbs._apicall
+    def get_feeds_timeline(self, after = None, per_page: int = 8):
+        params = '?'
+        if after is not None:
+            params = params + f'after={after}'
+        params = params + f'&per_page={per_page}'
+
+        respo = self.session.get(API_URL + f'feeds/timeline{params}')
+        self._on_response(respo)
+        obj = respo.json() 
 
         res = HornetActivities()
-        res.LoadFromDict(js)
+        res.load_from_dict(obj)
         return res
-    
-    @HornetClientAbs._ApiCall
-    def DeleteConversation(self, memberId) -> bool:
-        respo = self.Session.delete(API_URL + f'messages/{memberId}')
-        self._DoOnResponse(respo)
-        return (respo.status_code != 404)
-        
+
+    @HornetClientAbs._apicall
+    def delete_conversation(self, member_id) -> bool:
+        respo = self.session.delete(API_URL + f'messages/{member_id}')
+        self._on_response(respo)
+        return respo.status_code != 404
 
     # def GetLookupData(self):
-    #     Response = self.Session.get(API_URL + f'lookup_data/all')
+    #     Response = self.session.get(API_URL + f'lookup_data/all')
     #     Js = Response.json()
     #     save_dump('GetLookupData', Js) 
 
