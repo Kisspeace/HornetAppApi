@@ -1,8 +1,10 @@
 from .JsonClass import * 
 from typing import List
 
+
 API_HOST = "gethornet.com"
 API_URL = "https://" + API_HOST + '/api/v3/'
+HORNETAPP_URL = 'https://hornetapp.com/'
 
 DEF_MEMBERS_PER_PAGE = 27
 DEF_GALLERY_PREW_PHOTOS = 6
@@ -12,10 +14,12 @@ class IdAndTitle(JsonLoadable):
         self.id: int = None
         self.title: str = None
 
+
 class HornetPagination(JsonLoadable):
     def __init__(self):
         self.previous = None
         self.next = None
+
 
 class HornetFeedPhoto(JsonLoadable):
     def __init__(self):
@@ -27,10 +31,12 @@ class HornetFeedPhoto(JsonLoadable):
         self.square_url: str = ""
         self.activity_id: int = -1
 
+
 class HornetReactions(JsonLoadable):
     def __init__(self):
         self.total: int = 0
         self.reacted_to_by_me: bool = False
+
 
 class HornetPartialComment(JsonLoadable):
     def __init__(self):
@@ -47,6 +53,7 @@ class HornetPartialComment(JsonLoadable):
     def load_from_dict(self, source: dict):
         JsonLoadable.load_from_dict(self, source)
         self.account_username = source['account']['username']
+
 
 class HornetActivity(JsonLoadable): # FIXME not complete yet
     def __init__(self):
@@ -96,6 +103,7 @@ class HornetActivity(JsonLoadable): # FIXME not complete yet
         if (('photos' in source) and (self.photos is not None)):
             self.photos = parse_badnamed_dict_list(HornetPartialPhoto, source, 'photos', 'photo')
 
+
 class HornetActivities(JsonLoadable):
     def __init__(self):
         self.activities: List[HornetActivity] = []
@@ -106,12 +114,14 @@ class HornetActivities(JsonLoadable):
         if 'activities' in source:
             self.activities = parse_badnamed_dict_list(HornetActivity, source, 'activities', 'activity')
 
+
 class HornetPartialPhoto(JsonLoadable):
     def __init__(self):
         self.full_large_url: str = ""
         self.thumbnail_url: str = ""
         self.thumbnail_large_url: str = ""
         self.square_url: str = ""
+
 
 class HornetPhoto(HornetPartialPhoto):
     def __init__(self):
@@ -124,6 +134,7 @@ class HornetPhoto(HornetPartialPhoto):
         self.url: str = ""
         self.full_url: str = ""
         self.v6_full_url: str = ""  
+
 
 class HornetPartialMember(JsonLoadable):  
     def __init__(self):
@@ -166,6 +177,7 @@ class HornetPartialMember(JsonLoadable):
 
     def HasAvatar(self):
         return self.profile_photo_url != ""
+
 
 class HornetMember(HornetPartialMember):
     def __init__(self):
@@ -223,10 +235,12 @@ class HornetPartialMessage(JsonLoadable):
         self.data: str = ''
         self.type: str = '' #FIXME maybe int
 
+
 class HornetConversation(JsonLoadable):
     def __init__(self):
         self.profile = HornetPartialMember()
         self.last_message = HornetPartialMessage()
+
 
 class HornetConversations(JsonLoadable):
     def __init__(self):
@@ -324,6 +338,11 @@ class HornetSession(JsonLoadable): # FIXME not complete yet
             self.id: any = None
             self.balance: int = 0
 
+
+class HornetLocationInfo(JsonLoadable):
+    def __init__(self):
+        self.code: str = ''
+        self.eu: bool = False
 
 def parse_badnamed_dict_list(item_class, source: list, list_name: str, item_name: str):
     result: List[item_class] = []
