@@ -142,9 +142,9 @@ class HornetPartialMember(JsonLoadable):
         self.display_name: str = ''
         self.mitch_rank_index = None
         self.age: int = None
-        # self.account": {"username": "fffff0", "public": true}
-        self.account_username: str = ''
-        self.account_public: bool = False
+        self.account = self.Account()
+        # self.account_username: str = ''
+        # self.account_public: bool = False
         self.distance: float = 0.0
         self.unread_messages_from: int = 0
         self.explorer: bool = False
@@ -166,11 +166,16 @@ class HornetPartialMember(JsonLoadable):
         self.square_url: str = ''
         self.v6_full_url: str= ''
 
-    def load_from_dict(self, source: dict):
-        JsonLoadable.load_from_dict(self, source)
-        if 'account' in source:
-            self.account_username = source['account']['username']
-            self.account_public   = source['account']['public']
+    class Account(JsonLoadable):
+        def __init__(self):
+            self.username: str = ''
+            self.public: bool = False
+
+    # def load_from_dict(self, source: dict):
+    #     JsonLoadable.load_from_dict(self, source)
+    #     if 'account' in source:
+    #         self.account_username = source['account']['username']
+    #         self.account_public   = source['account']['public']
 
     def IsValid(self):
         return self.id != -1
