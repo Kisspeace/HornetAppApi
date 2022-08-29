@@ -114,6 +114,15 @@ class HornetActivities(JsonLoadable):
         if 'activities' in source:
             self.activities = parse_badnamed_dict_list(HornetActivity, source, 'activities', 'activity')
 
+class HornetComments(JsonLoadable):
+    def __init__(self):
+        self.comments: List[HornetComment] = []
+        self.pagination = HornetPagination()
+
+    def load_from_dict(self, source: dict):
+        JsonLoadable.load_from_dict(self, source)
+        if 'comments' in source:
+            self.comments = parse_badnamed_dict_list(HornetComment, source, 'comments', 'comment')
 
 class HornetPartialPhoto(JsonLoadable):
     def __init__(self):

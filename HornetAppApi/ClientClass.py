@@ -133,5 +133,5 @@ class HornetClientAbs:
         pass
 
     @_apicall
-    def get_comments(self, activity_id, before = None, after = None) -> List[any]:
+    def get_comments(self, activity_id, before = None, after = None) -> HornetComments:
         pass

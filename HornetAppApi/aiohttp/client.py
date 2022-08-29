@@ -280,7 +280,7 @@ class HornetClientAio(HornetClientAbs):
             return resp.status == 200
         
     @_apicall
-    async def get_comments(self, activity_id, before = None, after = None) -> List[any]:
+    async def get_comments(self, activity_id, before = None, after = None) -> HornetComments:
         if before is not None:
             params = f'&before={before}'
         elif after is not None:
@@ -295,5 +295,6 @@ class HornetClientAio(HornetClientAbs):
 
             await self._on_response(resp)
             obj = await resp.json()
-            res = obj
+            res = HornetComments()
+            res.load_from_dict(obj)
             return res
