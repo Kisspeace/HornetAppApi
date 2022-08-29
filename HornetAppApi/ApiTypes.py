@@ -38,7 +38,7 @@ class HornetReactions(JsonLoadable):
         self.reacted_to_by_me: bool = False
 
 
-class HornetPartialComment(JsonLoadable):
+class HornetComment(JsonLoadable):
     def __init__(self):
         self.id: int = -1
         self.type: str = ''
@@ -53,10 +53,6 @@ class HornetPartialComment(JsonLoadable):
     class Account(JsonLoadable):
         def __init__(self):
             self.username: str = ''
-
-    # def load_from_dict(self, source: dict):
-    #     JsonLoadable.load_from_dict(self, source)
-    #     self.account_username = source['account']['username']
 
 
 class HornetActivity(JsonLoadable): # FIXME not complete yet
@@ -87,7 +83,7 @@ class HornetActivity(JsonLoadable): # FIXME not complete yet
         # thumbnail	{…}
         self.reactions = HornetReactions()
         self.comments_total: int = 0 # comments: {total: 0}
-        self.last_comment: any = None # comments: {last_comment: null}
+        self.last_comment: HornetComment = None # comments: {last_comment: null}
         self.awards_total: int = 0 # awards: {total: 0}
 
     def load_from_dict(self, source: dict):
@@ -101,7 +97,7 @@ class HornetActivity(JsonLoadable): # FIXME not complete yet
             self.comments_total = source['comments']['total']
             if (('last_comment' in source['comments']) and
                 (source['comments']['last_comment'] is not None)):
-                self.last_comment = HornetPartialComment()
+                self.last_comment = HornetComment()
                 self.last_comment.load_from_dict(source['comments']['last_comment'])
 
         if (('photos' in source) and (self.photos is not None)):
@@ -112,7 +108,7 @@ class HornetActivities(JsonLoadable):
     def __init__(self):
         self.activities: List[HornetActivity] = []
         self.pagination = HornetPagination()
-        
+
     def load_from_dict(self, source: dict):
         JsonLoadable.load_from_dict(self, source)
         if 'activities' in source:
