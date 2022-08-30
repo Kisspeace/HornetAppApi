@@ -178,10 +178,10 @@ class HornetPartialMember(JsonLoadable):
             self.username: str = ''
             self.public: bool = False
 
-    def IsValid(self):
+    def is_valid(self):
         return self.id != -1
 
-    def HasAvatar(self):
+    def has_avatar(self):
         return self.thumbnail_url != ""
 
 
@@ -230,8 +230,8 @@ class HornetMember(HornetPartialMember):
         HornetPartialMember.load_from_dict(self, source)
         if 'photos' in source:
             self.photos = parse_badnamed_dict_list(HornetPhoto, source, 'photos', 'photo')
-          
-    def HasAvatar(self):
+
+    def has_avatar(self):
         return len(self.photos) > 0
 
 class HornetPartialMessage(JsonLoadable):
