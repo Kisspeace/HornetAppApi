@@ -182,7 +182,7 @@ class HornetPartialMember(JsonLoadable):
         return self.id != -1
 
     def has_avatar(self):
-        return self.thumbnail_url != ""
+        return self.thumbnail_url not in ('', None)
 
 
 class HornetMember(HornetPartialMember):
