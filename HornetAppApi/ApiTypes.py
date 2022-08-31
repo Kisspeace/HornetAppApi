@@ -183,6 +183,12 @@ class HornetPartialMember(JsonLoadable):
 
     def has_avatar(self):
         return self.thumbnail_url not in ('', None)
+    
+    def get_url(self, short: bool=True):
+        if short:
+            return f'https://hrnt.me/{self.account.username}'
+        else:
+            return f'https://hornet.com/profiles/{self.account.username}' # hornet.com/profiles/{$username}?p={$user_id}
 
 
 class HornetMember(HornetPartialMember):
