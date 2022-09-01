@@ -110,6 +110,9 @@ class HornetClientAio(HornetClientAbs):
 
     async def get_members_recent(self, page = 1, per_page = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
         return await self._get_members(path='recent', page=page, per_page=per_page)
+    
+    async def get_members_viewed_me(self, page: int=1, per_page: int= DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
+        return await self._get_members(path='viewed_me', page=page, per_page=per_page)
 
     @_apicall 
     async def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:
