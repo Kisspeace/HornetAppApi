@@ -62,6 +62,12 @@ class HornetClientAio(HornetClientAbs):
             return result
         return inner
 
+    @_apicall
+    async def _get_members(self, path: str, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
+        return await self._do_get(
+            url=f'{API_URL}members/{path}?page={page}&per_page={per_page}',
+            return_method=self._parse_members)
+
     # API functions:
 
     @_apicall
@@ -106,12 +112,6 @@ class HornetClientAio(HornetClientAbs):
                 headers = headers,
                 json = body
             )
-
-    @_apicall
-    async def _get_members(self, path: str, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
-        return await self._do_get(
-            url=f'{API_URL}members/{path}?page={page}&per_page={per_page}',
-            return_method=self._parse_members)
 
     async def get_members_near(self, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
         return await self._get_members(path='near', page=page, per_page=per_page)
