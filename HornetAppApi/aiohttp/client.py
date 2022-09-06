@@ -55,12 +55,10 @@ class HornetClientAio(HornetClientAbs):
         async def inner(self, *args, **kwargs):
             t = self.get_current_timeout()
             if t > 0:
-                # print('sleep: ', t)
                 await asyncio.sleep(t)
 
             result = await func(self, *args, **kwargs)
             self._last_apicall_time = time.time()
-            # print(f'{func.__name__} finished at: {self._last_apicall_time}')
             return result
         return inner
 
@@ -158,7 +156,10 @@ class HornetClientAio(HornetClientAbs):
     
     async def get_unread(self, page: int = 1, per_page: int = 10) -> HornetConversations:
         return await self.get_conversations(inbox = 'unread', page = page, per_page = per_page)
-
+    
+    async def get_requests(self, page: int = 1, per_page: int = 10) -> HornetConversations:
+        return await self.get_conversations(inbox = 'requests', page = page, per_page = per_page)
+    
     @_apicall
     async def get_member_feeds(self, member_id, after = None, per_page: int = 10) -> HornetActivities:
         params = '?'

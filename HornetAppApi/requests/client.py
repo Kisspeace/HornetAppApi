@@ -129,9 +129,11 @@ class HornetClientR(HornetClientAbs):
         res.load_from_dict(obj)
         return res
 
-    @HornetClientAbs._apicall
     def get_unread(self, page: int = 1, per_page: int = 10) -> HornetConversations:
         return self.get_conversations(inbox = 'unread', page = page, per_page = per_page)
+
+    def get_requests(self, page: int = 1, per_page: int = 10) -> HornetConversations:
+        return self.get_conversations(inbox = 'requests', page = page, per_page = per_page)
 
     @HornetClientAbs._apicall
     def get_feeds_timeline(self, after = None, per_page: int = 8):

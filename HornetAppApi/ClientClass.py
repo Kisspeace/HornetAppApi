@@ -26,11 +26,11 @@ class HornetClientAbs:
         pass
 
     def get_current_timeout(self) -> float:
-        result: float = 0.0
-        if ((self._last_apicall_time != None) and 
+        result: float = 0
+        if ((self._last_apicall_time is not None) and
             (self.apicall_timeout > 0)):
             t = (time.time() - self._last_apicall_time)
-            result = (self.apicall_timeout - t) if (t < self.apicall_timeout) else 0.0
+            result = (self.apicall_timeout - t) if (t < self.apicall_timeout) else 0
         return result
 
     # protected
@@ -49,13 +49,10 @@ class HornetClientAbs:
         def inner(self, *args, **kwargs):
             t = self.get_current_timeout()
             if t > 0:
-                # print('sleep: ', t)
                 time.sleep(t)
 
             result = func(self, *args, **kwargs)       
             self._last_apicall_time = time.time()
-            # print(f'{func.__name__} finished at: {self._last_apicall_time}')
-            # print(f'current timeout: {self.get_current_timeout()}')
             return result
         return inner
 
@@ -108,6 +105,10 @@ class HornetClientAbs:
 
     @_apicall
     def get_unread(self, page = 1, per_page: int = 10) -> HornetConversations:
+        pass
+    
+    @_apicall
+    def get_requests(self, page = 1, per_page: int = 10) -> HornetConversations:
         pass
 
     @_apicall
