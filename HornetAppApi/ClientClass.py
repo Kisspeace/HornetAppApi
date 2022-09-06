@@ -81,9 +81,17 @@ class HornetClientAbs:
         return self._get_members(path='recent', page=page, per_page=per_page)
 
     def get_members_viewed_me(self, page: int=1, per_page: int= DEF_MEMBERS_PER_PAGE) -> list:
+        return self._get_members(path='viewed_me', page=page, per_page=per_page)
+
+    @_apicall
+    def get_fans(self, page: int=1, per_page: int=25) -> list:
         pass
 
-    @_apicall 
+    @_apicall
+    def get_favourites(self, page: int=1, per_page: int=25) -> list:
+        pass
+
+    @_apicall
     def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> list:
         pass
 

@@ -23,6 +23,31 @@ class HornetClientR(HornetClientAbs):
     def get_token(self) -> str:
         return self.session.headers['Authorization'][7:] if 'Authorization' in self.session.headers else ''
 
+    # protected
+    
+    def _do_get(self, url: str, return_type: JsonLoadable=None,
+                      return_method=None, obj_name: str=None, headers: dict=None) -> any:
+        headers = self.get_headers() if headers is None else headers
+        if headers is False:
+            respo = self.session.get(url)
+        else:
+            respo = self.session.get(url, headers=headers)
+
+        self._on_response(response=respo)
+
+        if (return_type is not None) or (return_method is not None):
+            obj = respo.json()
+
+            if return_type is not None:
+                res: JsonLoadable = return_type()
+                res.load_from_dict(obj if obj_name is None else obj[obj_name])
+                return res
+
+            if return_method is not None:
+                res: any = return_method(obj)
+                return res
+
+
     # API functions:
 
     @HornetClientAbs._apicall
@@ -82,6 +107,18 @@ class HornetClientR(HornetClientAbs):
         self._on_response(respo)
         obj = respo.json()
         return self._parse_members(obj)
+
+    @HornetClientAbs._apicall
+    def get_fans(self, page: int=1, per_page: int=25) -> List[HornetPartialMember]:
+        return self._do_get(
+            url=f'{API_URL}favourites/fans.json?page={page}&per_page={per_page}',
+            return_method=self._parse_members)
+
+    @HornetClientAbs._apicall
+    def get_favourites(self, page: int=1, per_page: int=25) -> List[HornetPartialMember]:
+        return self._do_get(
+            url=f'{API_URL}favourites/favourites.json?page={page}&per_page={per_page}',
+            return_method=self._parse_members)
 
     @HornetClientAbs._apicall
     def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:

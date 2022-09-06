@@ -122,7 +122,19 @@ class HornetClientAio(HornetClientAbs):
     async def get_members_viewed_me(self, page: int=1, per_page: int= DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
         return await self._get_members(path='viewed_me', page=page, per_page=per_page)
 
-    @_apicall 
+    @_apicall
+    async def get_fans(self, page: int=1, per_page: int=25) -> List[HornetPartialMember]:
+        return await self._do_get(
+            url=f'{API_URL}favourites/fans.json?page={page}&per_page={per_page}',
+            return_method=self._parse_members)
+
+    @_apicall
+    async def get_favourites(self, page: int=1, per_page: int=25) -> List[HornetPartialMember]:
+        return await self._do_get(
+            url=f'{API_URL}favourites/favourites.json?page={page}&per_page={per_page}',
+            return_method=self._parse_members)
+
+    @_apicall
     async def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:
         return await self._do_get(
             url=f'{API_URL}members/search?username={username}&page={page}&per_page={per_page}',
