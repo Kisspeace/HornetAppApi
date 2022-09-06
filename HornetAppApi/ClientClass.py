@@ -42,13 +42,16 @@ class HornetClientAbs:
     def _parse_members(self, source: dict) -> list:
         return parse_badnamed_dict_list(HornetPartialMember, source, 'members', 'member')
 
+    def _parse_feed_photos(self, source: dict) -> list:
+        return parse_badnamed_dict_list(HornetFeedPhoto, source, 'feed_photos', 'feed_photo')
+
     def _apicall(func):
         def inner(self, *args, **kwargs):
             t = self.get_current_timeout()
             if t > 0:
                 # print('sleep: ', t)
                 time.sleep(t)
-            
+
             result = func(self, *args, **kwargs)       
             self._last_apicall_time = time.time()
             # print(f'{func.__name__} finished at: {self._last_apicall_time}')
@@ -57,7 +60,7 @@ class HornetClientAbs:
         return inner
 
     # API functions:
-    
+
     @_apicall
     def get_session(self) -> HornetSession:
         pass
@@ -65,7 +68,7 @@ class HornetClientAbs:
     @_apicall
     def get_location_info(self) -> HornetLocationInfo:
         pass
-    
+
     @_apicall
     def set_filters(self, min_age: int, max_age: int):
         pass

@@ -6,7 +6,7 @@ class HornetClientAio(HornetClientAbs):
     def __init__(self):
         HornetClientAbs.__init__(self)
         self._headers = {}
-        
+
     # Setters & getters:
 
     def set_headers(self, headers: dict):
@@ -23,6 +23,30 @@ class HornetClientAio(HornetClientAbs):
 
     # protected
 
+    async def _do_get(self, url: str, return_type: JsonLoadable=None,
+                      return_method=None, obj_name: str=None, headers: dict=None) -> any:
+        headers = self._headers if headers is None else headers
+        async with aiohttp.ClientSession() as session:
+            if headers == False:
+                respo = await session.get(url)
+            else:
+                respo = await session.get(url, headers=headers)
+
+        await self._on_response(response=respo)
+
+        if (return_type is not None) or (return_method is not None):
+            obj = await respo.json()
+
+            if return_type is not None:
+                res: JsonLoadable = return_type()
+                res.load_from_dict(obj if obj_name is None else obj[obj_name])
+                return res
+
+            if return_method is not None:
+                res: any = return_method(obj)
+                return res
+
+
     async def _on_response(self, response):
         if callable(self.event_response):
             await self.event_response(self, response)
@@ -33,7 +57,7 @@ class HornetClientAio(HornetClientAbs):
             if t > 0:
                 # print('sleep: ', t)
                 await asyncio.sleep(t)
-            
+
             result = await func(self, *args, **kwargs)
             self._last_apicall_time = time.time()
             # print(f'{func.__name__} finished at: {self._last_apicall_time}')
@@ -44,28 +68,21 @@ class HornetClientAio(HornetClientAbs):
 
     @_apicall
     async def get_session(self) -> HornetSession:
-        async with aiohttp.ClientSession() as session:
-            resp = await session.get(
-                f'{API_URL}session',
-                headers = self._headers)
-
-            await self._on_response(resp)
-            obj = await resp.json()
-            res = HornetSession()
-            res.load_from_dict(obj['session'])
-            return res
+        return await self._do_get(
+            url=f'{API_URL}session',
+            return_type=HornetSession,
+            obj_name='session')
 
     @_apicall
     async def get_location_info(self) -> HornetLocationInfo:
-        async with aiohttp.ClientSession() as session:
-            resp = await session.get(
-                f'{HORNETAPP_URL}location-info')
-
-            await self._on_response(resp)
-            obj = await resp.json()
-            res = HornetLocationInfo()
-            res.load_from_dict(obj)
-            return res
+        headers: dict = {}
+        if 'User-Agent' in self._headers:
+            headers['User-Agent'] = self._headers['User-Agent']
+            
+        return await self._do_get(
+            url=f'{HORNETAPP_URL}location-info',
+            return_type=HornetLocationInfo,
+            headers=headers)
 
     @_apicall
     async def set_filters(self, min_age: int, max_age: int):
@@ -94,93 +111,50 @@ class HornetClientAio(HornetClientAbs):
 
     @_apicall
     async def _get_members(self, path: str, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}members/{path}?page={page}&per_page={per_page}',
-                headers = self._headers
-            ) 
-
-            await self._on_response(respo)
-            obj = await respo.json()
-
-        return self._parse_members(obj)
+        return await self._do_get(
+            url=f'{API_URL}members/{path}?page={page}&per_page={per_page}',
+            return_method=self._parse_members)
 
     async def get_members_near(self, page: int = 1, per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
         return await self._get_members(path='near', page=page, per_page=per_page)
 
     async def get_members_recent(self, page = 1, per_page = DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
         return await self._get_members(path='recent', page=page, per_page=per_page)
-    
+
     async def get_members_viewed_me(self, page: int=1, per_page: int= DEF_MEMBERS_PER_PAGE) -> List[HornetPartialMember]:
         return await self._get_members(path='viewed_me', page=page, per_page=per_page)
 
     @_apicall 
     async def get_members_by_username(self, username: str, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}members/search?username={username}&page={page}&per_page={per_page}',
-                headers = self._headers
-            )
+        return await self._do_get(
+            url=f'{API_URL}members/search?username={username}&page={page}&per_page={per_page}',
+            return_method=self._parse_members)
 
-            await self._on_response(respo)
-            obj = await respo.json()
-
-        return self._parse_members(obj)
-    
     @_apicall
     async def get_members_by_hashtags(self, hashtags, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}members/search.json?hashtags={hashtags}&page={page}&per_page={per_page}',
-                headers = self._headers
-            )
-            await self._on_response(respo)
-            obj = await respo.json()
-            return self._parse_members(obj)
+        return await self._do_get(
+            url=f'{API_URL}members/search.json?hashtags={hashtags}&page={page}&per_page={per_page}',
+            return_method=self._parse_members)
 
     @_apicall
     async def get_member(self, member_id, gallery_preview_photos = DEF_GALLERY_PREW_PHOTOS) -> HornetMember:
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}members/{member_id}.json?gallery_preview_photos={gallery_preview_photos}',
-                headers = self._headers
-            )
-
-            await self._on_response(respo)
-            obj = await respo.json()
-
-        res = HornetMember()
-        res.load_from_dict(obj['member'])
-        return res
+        return await self._do_get(
+            url=f'{API_URL}members/{member_id}.json?gallery_preview_photos={gallery_preview_photos}',
+            return_type=HornetMember,
+            obj_name='member')
 
     @_apicall
     async def get_member_feed_photos(self, member_id, page: int = 1,
                                      per_page: int = DEF_MEMBERS_PER_PAGE) -> List[HornetFeedPhoto]:
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}feed_photos?page={page}&per_page={per_page}&member_id={member_id}', 
-                headers = self._headers
-            )
-            
-            await self._on_response(respo)
-            obj = await respo.json()
-
-        return parse_badnamed_dict_list(HornetFeedPhoto, obj, 'feed_photos', 'feed_photo')
+        return await self._do_get(
+            url=f'{API_URL}feed_photos?page={page}&per_page={per_page}&member_id={member_id}',
+            return_method=self._parse_feed_photos)
 
     @_apicall
     async def get_conversations(self, inbox: str = "primary", page: int = 1, per_page: int = 10) -> HornetConversations:
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}messages/conversations.json?inbox={inbox}&page={page}&per_page={per_page}',
-                headers = self._headers
-            )
-
-        await self._on_response(respo)
-        obj = await respo.json()
-
-        res = HornetConversations()
-        res.load_from_dict(obj)          
-        return res
+        return await self._do_get(
+            url=f'{API_URL}messages/conversations.json?inbox={inbox}&page={page}&per_page={per_page}',
+            return_type=HornetConversations)
     
     async def get_unread(self, page: int = 1, per_page: int = 10) -> HornetConversations:
         return await self.get_conversations(inbox = 'unread', page = page, per_page = per_page)
@@ -192,18 +166,9 @@ class HornetClientAio(HornetClientAbs):
             params = params + f'after={after}'
         params = params + f'&per_page={per_page}'
 
-        async with aiohttp.ClientSession() as session:
-            respo = await session.get(
-                f'{API_URL}feeds/{member_id}{params}',
-                headers = self._headers
-            )
-
-        await self._on_response(respo)
-        obj = await respo.json()
-
-        res = HornetActivities()
-        res.load_from_dict(obj)
-        return res
+        return await self._do_get(
+            url=f'{API_URL}feeds/{member_id}{params}',
+            return_type=HornetActivities)
 
     @_apicall
     async def get_feeds_timeline(self, after = None, per_page: int = 8) -> HornetActivities:
@@ -211,19 +176,10 @@ class HornetClientAio(HornetClientAbs):
         if after is not None:
             params = params + f'after={after}'
         params = params + f'&per_page={per_page}'
-        
-        async with aiohttp.ClientSession() as session: 
-            respo = await session.get(
-                f'{API_URL}feeds/timeline{params}',
-                headers = self._headers
-            )
-        
-        await self._on_response(respo)
-        obj = await respo.json() 
 
-        res = HornetActivities()
-        res.load_from_dict(obj)
-        return res
+        return await self._do_get(
+            url=f'{API_URL}feeds/timeline{params}',
+            return_type=HornetActivities)
 
     @_apicall
     async def delete_conversation(self, member_id) -> bool:
@@ -291,13 +247,6 @@ class HornetClientAio(HornetClientAbs):
         else:
             params = ''
 
-        async with aiohttp.ClientSession() as session:
-            resp = await session.get(
-                f'{API_URL}activities/{activity_id}/comments.json?activity_id={activity_id}{params}',
-                headers = self._headers)
-
-            await self._on_response(resp)
-            obj = await resp.json()
-            res = HornetComments()
-            res.load_from_dict(obj)
-            return res
+        return await self._do_get(
+            url=f'{API_URL}activities/{activity_id}/comments.json?activity_id={activity_id}{params}',
+            return_type=HornetComments)
