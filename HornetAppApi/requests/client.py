@@ -126,7 +126,7 @@ class HornetClientR(HornetClientAbs):
         self._on_response(respo)
         obj = respo.json()
         res = HornetConversations()
-        res.load_from_dict(obj)          
+        res.load_from_dict(obj)
         return res
 
     @HornetClientAbs._apicall
@@ -142,7 +142,7 @@ class HornetClientR(HornetClientAbs):
 
         respo = self.session.get(API_URL + f'feeds/timeline{params}')
         self._on_response(respo)
-        obj = respo.json() 
+        obj = respo.json()
 
         res = HornetActivities()
         res.load_from_dict(obj)
@@ -196,8 +196,8 @@ class HornetClientR(HornetClientAbs):
 
     # def Send(self, memberId, data = None, type = "chat"): # Android like
     #     Js = {
-    #         "client_ref": str(uuid.uuid4()), 
-    #         "real_id": str(uuid.uuid4()), 
+    #         "client_ref": str(uuid.uuid4()),
+    #         "real_id": str(uuid.uuid4()),
     #         "sender": int(memberId),
     #         "type": "receipt"
     #     }
@@ -209,7 +209,7 @@ class HornetClientR(HornetClientAbs):
 
     #     Js = {
     #         "message":{
-    #             "client_ref": str(uuid.uuid4()), 
+    #             "client_ref": str(uuid.uuid4()),
     #             "data": str(data),
     #             "created_at": str(datetime.now().isoformat()),
     #             "is_deletable": None,
@@ -218,8 +218,8 @@ class HornetClientR(HornetClientAbs):
     #             "sender": senderId,
     #             "type": str(type)
     #         },
-    #         "n": str(uuid.uuid4()), 
-    #         "s": str(secrets.token_bytes(32).hex()), 
+    #         "n": str(uuid.uuid4()),
+    #         "s": str(secrets.token_bytes(32).hex()),
     #         "t": int(math.trunc(time.time()))
     #     }
 
