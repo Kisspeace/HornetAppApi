@@ -179,7 +179,7 @@ class HornetPartialMember(JsonLoadable):
             self.public: bool = False
 
     def is_valid(self):
-        return self.id != -1
+        return self.id not in (None, -1)
 
     def has_avatar(self):
         return self.thumbnail_url not in ('', None)
