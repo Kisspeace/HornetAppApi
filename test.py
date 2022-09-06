@@ -1,21 +1,50 @@
 import HornetAppApi
-import copy, sys, time, asyncio, random, json, inspect
+import sys, time, asyncio, json
 from HornetAppApi import *
+import inspect
+import os
+import datetime
 
-client = None
-engine = 'aiohttp'
+client: HornetAppApi.HornetClientAbs = None
+ENGINE = 'aiohttp'
+
 TEST_USER_ID = 0
-TEST_USERNAME = '1d'
+TEST_USER_IGNORE_ID = 0
+TEST_USER_BLOCK_ID = 0
+TEST_USERNAME = 't'
+TEST_ACTIVITY_ID = 0
+
+TEST_DANGEROUS = False # features like: block users, ignore users
 PRINT_DATA = False
+PAUSE_AFTER_CALL = False
+APICALL_TIMEOUT = 0.485
+
+DUMPS_DIR = 'test-dumps'
+
+TOKEN: str = '' # hornet token
+HEADERS = { # headers from oficial android client
+    'Authorization': '',
+    'Accept-Language': 'en', # set yout language
+    'Accept': 'application/json',
+    'X-Device-Identifier': '', # set your device id
+    'X-Client-Version': 'Android 7.1.1',
+    'X-Device-Name': '', # Set yout device name
+    'Cache-Control': 'no-cache',
+    'Host': HornetAppApi.ApiTypes.API_HOST,
+    'Connection': 'Keep-Alive',
+    'Accept-Encoding': 'gzip',
+    'User-Agent': 'okhttp/4.8.1'
+}
 
 
-def islistof(alist: list, type) -> bool:
-    if (isinstance(alist, list) != True):
+def islistof(alist: list, atype) -> bool:
+    if not isinstance(alist, list):
         return False
-    if (len(alist) > 0):
-        return isinstance(alist[0], type)
+    if len(alist) > 0:
+        return isinstance(alist[0], atype)
     else:
         return False
+
 
 def ObjToDict(obj: object) -> dict:
     result = obj.__dict__
@@ -29,19 +58,18 @@ def ObjToDict(obj: object) -> dict:
                     result[name].append(ObjToDict(i))
     return result
 
+
 def js(a) -> str:
     if islistof(a, JsonLoadable):
-        print('is list of')
         l = []
         for i in a:
-            print('vkusno', type(i))
             l.append(ObjToDict(i))
         a = l
     else:
-        print('is other')
         a = ObjToDict(a)
 
     return json.dumps(a, indent = 4)
+
 
 def writeln(a):
     if (isinstance(a, JsonLoadable) or islistof(a, JsonLoadable)):
@@ -49,133 +77,132 @@ def writeln(a):
     else:
         print(a)
 
-def calc_time(func):
-    def inner(*args, **kwargs):
-        started_at = time.time()
-        result = func(*args, **kwargs)
-        finished_at = time.time()
-        elapsed = (finished_at - started_at)
-        print(f'{func.__name__}: {elapsed} sec.')
-        return result, elapsed
-    return inner
 
 def test(func, name = ''):
-    global current_func
-    global PRINT_DATA
-    global client
 
-    def OnResponse(sender, response):
-        js = response.json()
-        save_dump(f'{sender.__class__.__name__}_{name}', data=js)
+    def make_save(sender, obj):
+        save_dump(f'{sender.__class__.__name__}_{name}', data=obj)
 
-    async def OnResponseAsync(sender, response):
-        js = await response.json()
-        save_dump(f'{sender.__class__.__name__}_{name}', data=js)
+    def on_response(sender, response):
+        try:
+            obj = response.json()
+            make_save(sender, obj)
+        except Exception as e:
+            print(f'on_response: error {e}')
+
+    async def on_response_async(sender, response): # is dead sometimes 
+        try:
+            # print('on_response_async: before await response.json()')
+            obj = await response.json()
+            # print('on_response_async: before make_save')
+            make_save(sender, obj)
+        except Exception as e:
+            print(f'on_response_async: error {e}')
 
     def set_event():
         if isinstance(client, HornetAppApi.HornetClientAio):
-            client.OnResponse = OnResponseAsync
+            client.event_response = on_response_async
         else:
-            client.OnResponse = OnResponse
+            client.event_response = on_response
 
     def after(res):
         print(f'{name} result: ', type(res))
         if PRINT_DATA:
             writeln(res)
+        if PAUSE_AFTER_CALL:
+            input()
+        if (isinstance(res, JsonLoadable) or
+           (isinstance(res, list) and len(res) > 0)):
+                save_dump(f'_{name}', data=js(res), prefix='fromobj')
 
-    async def innerAsync(*args, **kwargs):
+    async def inner_async(*args, **kwargs):
         set_event()
         result = await func(*args, **kwargs)
-        after(result)    
+        after(result)
         return result
-    
+
     def inner(*args, **kwargs):
         set_event()
         result = func(*args, **kwargs)
-        after(result)    
+        after(result)
         return result
 
-    def save_dump(name: str, data): 
-        f = open(f'dump_{name}_{time.time()}.json', 'w')
+    def save_dump(name: str, data, prefix: str = 'dump'):
+        filename: str = f'{prefix}_{name}_{time.time()}.json'
+        filename = os.path.join(DUMPS_SUBDIR, filename)
+        os.makedirs(DUMPS_SUBDIR, mode = 0o777, exist_ok = True)
+
+        file = open(filename, 'w')
         if isinstance(data, dict):
-            f.write(json.dumps(data, indent = 4))
+            file.write(json.dumps(data, indent=4))
         else:
-            f.write(str(data))
-        f.close()
+            file.write(str(data))
+        file.close()
 
     if isinstance(client, HornetAppApi.HornetClientAio):
-        return innerAsync
+        return inner_async
     else:
         return inner
 
-def CreateClient(engine_name):
-    if (engine_name == 'requests'):
+
+async def go(func, func_name: str, *args, **kwargs):
+    if inspect.isawaitable(func) or isinstance(client, HornetClientAio):
+        return await test(func, func_name)(*args, **kwargs)
+    else:
+        return test(func, func_name)(*args, **kwargs)
+
+
+def new_client(engine_name):
+    if engine_name == 'requests':
         return HornetAppApi.HornetClientR()
-    elif (engine_name == 'aiohttp'):
+    elif engine_name == 'aiohttp':
         return HornetAppApi.HornetClientAio()
     else:
         return None
 
+
 async def test_async():
-    global engine
-    global client
-    global TEST_USER_ID
-    global TEST_USERNAME
 
-    await test(client.GetMembersByHashtags, 'GetMembersByHashtags')(hashtags='transgender')
-    await test(client.GetMember, 'GetMember')(TEST_USER_ID)
-    await test(client.GetMembersNear, 'GetMembersNear')()
-    await test(client.GetMembersRecent, 'GetMembersRecent')()
-    await test(client.GetMembersByUsername, 'GetMembersByUsername')(username=TEST_USERNAME)
-    await test(client.GetMemberFeedPhotos, 'GetMemberFeedPhotos')(memberId=TEST_USER_ID)
-    await test(client.GetUnread, 'GetUnread')()
-    await test(client.GetMemberFeeds, 'GetMemberFeeds')(TEST_USER_ID)
-    await test(client.GetFeedsTimeline, 'GetFeedsTimeline')()
-    await test(client.SetFilters, 'SetFilters')(0, 100)
+    if TEST_DANGEROUS:
+        await go(client.add_ignore_member, 'add_ignore_member', TEST_USER_IGNORE_ID)
+        await go(client.delete_ignore_member, 'delete_ignore_member', TEST_USER_IGNORE_ID)
 
-async def async_main():
-    await asyncio.wait([
-        asyncio.create_task(test_async())
-    ])
+        await go(client.add_block_member, 'add_block_member', TEST_USER_BLOCK_ID)
+        await go(client.delete_block_member, 'delete_block_member', TEST_USER_BLOCK_ID)
+
+    await go(client.get_fans, 'get_fans')
+    await go(client.get_favourites, 'get_favourites')
+    await go(client.get_conversations, 'get_conversations')
+    await go(client.get_requests, 'get_requests')
+    await go(client.get_unread, 'get_unread')
+    await go(client.get_location_info, 'get_location_info')
+    await go(client.get_session, 'get_session')
+    await go(client.get_comments, 'get_comments', TEST_ACTIVITY_ID)
+    await go(client.get_member, 'get_member', TEST_USER_ID)
+    await go(client.get_members_near, 'get_members_near')
+    await go(client.get_members_recent, 'get_members_recent')
+    await go(client.get_members_by_hashtags, 'get_members_by_hashtags', hashtags='transgender')
+    await go(client.get_members_by_username, 'get_members_by_username', username=TEST_USERNAME)
+    await go(client.get_member_feed_photos, 'get_member_feed_photos', member_id=TEST_USER_ID)
+    await go(client.get_member_feeds, 'get_member_feeds', TEST_USER_ID)
+    await go(client.get_feeds_timeline, 'get_feeds_timeline')
+    await go(client.set_filters, 'set_filters', min_age=0, max_age=100)
+
 
 if len(sys.argv) > 1:
-    engine = sys.argv[1]
-print(f'Test for {engine}:')
+    ENGINE = sys.argv[1]
+print(f'Test for {ENGINE}:')
 
-client = CreateClient(engine)
-headers = {
-    'Authorization': '',
-    'Accept-Language': 'en', # set yout language
-    'Accept': 'application/json',
-    'X-Device-Identifier': '', # set yout device id
-    'X-Client-Version': 'Android 7.1.1',
-    'X-Device-Name': '', # Set yout device name
-    'Cache-Control': 'no-cache',
-    'Host': HornetAppApi.ApiTypes.API_HOST,
-    'Connection': 'Keep-Alive',
-    'Accept-Encoding': 'gzip',
-    'User-Agent': 'okhttp/4.8.1'
-}
-client.SetHeaders(headers)
-client.ApiCallTimeout = 0.485
-client.SetToken('') # TOKEN HERE
+DUMPS_SUBDIR = os.path.join(DUMPS_DIR, f'{ENGINE}-{datetime.datetime.now()}')
 
-if (client.GetToken() == ''):
+client = new_client(ENGINE)
+client.set_headers(HEADERS)
+client.apicall_timeout = APICALL_TIMEOUT
+client.set_token(TOKEN)
+
+if client.get_token() == '':
     print('Please set token!')
     exit()
 
-if isinstance(client, HornetClientAio):
-    asyncio.run(async_main())
-else:
-    test(client.GetMembersByHashtags, 'GetMembersByHashtags')(hashtags='transgender')
-    test(client.GetMember, 'GetMember')(TEST_USER_ID)
-    test(client.GetMembersNear, 'GetMembersNear')()
-    test(client.GetMembersRecent, 'GetMembersRecent')()
-    test(client.GetMembersByUsername, 'GetMembersByUsername')(username=TEST_USERNAME)
-    test(client.GetMemberFeedPhotos, 'GetMemberFeedPhotos')(memberId=TEST_USER_ID)
-    test(client.GetUnread, 'GetUnread')()
-    test(client.GetMemberFeeds, 'GetMemberFeeds')(TEST_USER_ID)
-    test(client.GetFeedsTimeline, 'GetFeedsTimeline')()
-    test(client.SetFilters, 'SetFilters')(0, 100)
-
+asyncio.run(test_async())
 print('fin')
