@@ -19,7 +19,7 @@ class HornetClientAio(HornetClientAbs):
         self._headers['Authorization'] = 'Hornet ' + token
 
     def get_token(self) -> str:
-        return self._headers['Authorization'][7:]
+        return self._headers['Authorization'][7:] if 'Authorization' in self._headers else ''
 
     # protected
 
