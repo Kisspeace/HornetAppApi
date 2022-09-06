@@ -7,7 +7,7 @@ python -m pip install -e https://github.com/Kisspeace/HornetAppApi
 ```
 ### Create client and set headers
 ```python
-from HornetAppApi import *
+import HornetAppApi
 
 headers = { # from android app
     'Authorization': '',
