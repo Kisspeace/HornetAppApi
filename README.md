@@ -25,24 +25,24 @@ headers = { # from android app
 
 # client = HornetAppApi.HornetClientR() # for requests engine
 client = HornetAppApi.HornetClientAio() # for aiohttp engine
-client.SetHeaders(headers)
-client.ApiCallTimeout = 0.485 # you can change timeout between calls
-client.SetToken('') # Hornet token
+client.set_headers(headers)
+client.apicall_timeout = 0.485 # you can change timeout between calls
+client.set_token('') # Hornet token
 ```
 ### With aiohttp
 ```python
 # client must be HornetClientAio
-users = await client.GetMembersNear()
+users = await client.get_members_near()
 for u in users:
-    print(f'[{u.id} {u.account_username }] name: "{u.display_name}" age: {u.age}')
+    print(f'[{u.id} {u.account.username}] name: "{u.display_name}" age: {u.age}')
 ```
 
 ### With requests
 ```python
 # client must be HornetClientR
-users = client.GetMembersNear()
+users = client.get_members_near()
 for u in users:
-    print(f'[{u.id} {u.account_username }] name: "{u.display_name}" age: {u.age}')
+    print(f'[{u.id} {u.account.username}] name: "{u.display_name}" age: {u.age}')
 ```
 
 ### capabilities
@@ -50,13 +50,17 @@ for u in users:
 * ✔️ Search users recent
 * ✔️ Search users by hashtags
 * ✔️ Search users by name
+* ✔️ Get users who checked you
 * ✔️ Get user by id
 * ✔️ Get user feeds
 * ✔️ Get user feed photos
 * ✔️ Get feeds timeline
+* ✔️ Get comments
 * ✔️ Get conversations
 * ✔️ Get unread conversations
 * ✔️ Delete conversation
+* ✔️ Ignore list - add or delete user
+* ✔️ Black list - add or delete user
 * ➖ Set search filters (only min and max age)
 * ❌ Send messages
 * ❌ Create posts
