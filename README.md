@@ -3,7 +3,7 @@
 
 ### Install
 ```shell
-python -m pip install -e "git+https://github.com/Kisspeace/HornetAppApi.git#egg=HornetAppApi" 
+python -m pip install "git+https://github.com/Kisspeace/HornetAppApi.git#egg=HornetAppApi" 
 ```
 ### Create client and set headers
 ```python
