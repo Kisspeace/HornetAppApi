@@ -7,9 +7,10 @@ setup(
     # author_email='Kisspeace@example.com',
     url='http://github.com/Kisspeace/HornetAppApi',
     description='gethornet.com API wrapper',
-    packages = ['HornetAppApi'],
+    packages = ['HornetAppApi', 'HornetAppApi.aiohttp', 'HornetAppApi.requests'],
     install_requires=[
         # 'uuid',
-        'aiohttp'
+        'aiohttp',
+        'requests'
     ]
 )
