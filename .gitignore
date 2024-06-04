@@ -2,3 +2,4 @@
 *.json
 test_dumps
 test_copy.py
+*.egg-info
