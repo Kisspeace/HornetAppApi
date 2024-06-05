@@ -232,6 +232,19 @@ class HornetClientR(HornetClientAbs):
         self._on_response(resp)
         return resp.status == 200
 
+    @HornetClientAbs._apicall
+    def get_comments(self, activity_id, before = None, after = None) -> HornetComments:
+        if before is not None:
+            params = f'&before={before}'
+        elif after is not None:
+            params = f'&after={after}'
+        else:
+            params = ''
+
+        return self._do_get(
+            url=f'{API_URL}activities/{activity_id}/comments.json?activity_id={activity_id}{params}',
+            return_type=HornetComments)
+
     # def GetLookupData(self):
     #     Response = self.session.get(API_URL + f'lookup_data/all')
     #     Js = Response.json()
