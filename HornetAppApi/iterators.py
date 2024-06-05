@@ -35,6 +35,9 @@ class HornetClientIterPage(HornetClientIter):
         else:
             return (self.page >= self.stop_at)
 
+    def _check_result(self, result) -> bool:
+        return True
+
     def _on_got_result(self, result):
         pass
 
@@ -43,7 +46,7 @@ class HornetClientIterPage(HornetClientIter):
             raise StopIteration
         self.page += 1
         result = self._client_method()(*self._method_args())
-        if not result:
+        if (not result) or (not self._check_result(result)):
             raise StopIteration
         self._on_got_result(result)
         return result
@@ -53,7 +56,7 @@ class HornetClientIterPage(HornetClientIter):
             raise StopAsyncIteration
         self.page += 1
         result = await self._client_method()(*self._method_args())
-        if not result:
+        if (not result) or (not self._check_result(result)):
             raise StopAsyncIteration
         self._on_got_result(result)
         return result
@@ -139,3 +142,19 @@ class HornetClientMembersPageIterByUsername(HornetClientMembersPageIter):
 
     def _client_method(self):
         return self.client.get_members_by_username
+
+
+class HornetClientCommentsPageIter(HornetClientIterPagination):
+
+    def __init__(self, activity_id=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.activity_id = activity_id
+
+    def _check_result(self, result) -> bool:
+        return (result.pagination.previous != '')
+
+    def _client_method(self):
+        return self.client.get_comments
+
+    def _method_args(self):
+        return (self.activity_id, self.pagination.previous)
