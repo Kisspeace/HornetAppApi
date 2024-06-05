@@ -128,6 +128,12 @@ class HornetClientR(HornetClientAbs):
         return self._parse_members(obj)
 
     @HornetClientAbs._apicall
+    def get_members_by_hashtags(self, hashtags, page: int = 1, per_page: int = 25) -> List[HornetPartialMember]:
+        return self._do_get(
+            url=f'{API_URL}members/search.json?hashtags={hashtags}&page={page}&per_page={per_page}',
+            return_method=self._parse_members)
+
+    @HornetClientAbs._apicall
     def get_member(self, member_id, gallery_preview_photos: int = DEF_GALLERY_PREW_PHOTOS) -> HornetMember:
         respo = self.session.get(API_URL + f'members/{member_id}.json?gallery_preview_photos={gallery_preview_photos}')
         self._on_response(respo)
